@@ -3,7 +3,9 @@ package dev.verite.myposts
 import android.os.Binder
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
+import androidx.recyclerview.widget.LinearLayoutManager
 import dev.verite.myposts.databinding.ActivityCommentsBinding
 import dev.verite.myposts.databinding.ActivityMainBinding
 import retrofit2.Call
@@ -20,6 +22,7 @@ class CommentsActivity : AppCompatActivity() {
         setupToolabar()
         obtainPostId()
         fetchPostById()
+        fetchComments()
     }
     fun obtainPostId(){
         postId = intent.extras?.getInt("POST_ID")?:0
@@ -43,5 +46,25 @@ class CommentsActivity : AppCompatActivity() {
         setSupportActionBar(binding.toolbarComments)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         supportActionBar?.setDisplayShowTitleEnabled(false)
+    }
+
+    fun fetchComments(){
+        val apiClient = ApiClient.buildApiClient(ApiInterface::class.java)
+        val request = apiClient.getComments()
+        request.enqueue(object: Callback<List<Comment>> {
+            override fun onResponse(call: Call<List<Comment>>, response: Response<List<Comment>>) {
+                if (response.isSuccessful){
+                    var comments=response.body()
+                    Toast.makeText(baseContext,"fetched ${comments!!.size}posts",Toast.LENGTH_LONG).show()
+                    var adapter=CommentsRvAdapter(comments)
+                    Log.d("Tag",comments.toString())
+                    binding.rvComments.adapter=adapter
+                    binding.rvComments.layoutManager= LinearLayoutManager(baseContext)
+                }
+            }
+            override fun onFailure(call: Call<List<Comment>>, t: Throwable) {
+
+            }
+        })
     }
 }
